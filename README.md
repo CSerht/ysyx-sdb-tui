@@ -43,3 +43,45 @@ A simple tui used for sdb in the ysyx project's nemu or npc.
 > $\color{red}{请不要}$把 `disasm_pos_and_hl()`函数放在 `trace_and_difftest` 中，这样会大量执行 `system()` ，这可能导致你的操作系统产生损坏！
 
 ### AM
+
+1. `abstract-machine`添加`CFLAGS += -ggdb`和`GDB  = gdb-multiarch`，并且把`O2`改为`O1`，然后将AM目录下的所有`build`清除，重新编译
+2. 在`nemu.mk`的`image:`下添加：
+`GDB_CMD_LIST := $(AM_HOME)/tools/gdb-cmd.txt`
+```makefile
+	@$(OBJDUMP) -M no-aliases -d $(IMAGE).elf > $(IMAGE)-no-aliases.txt
+# Only for debugging, close it in other cases
+	@echo + GDB-GEN-TXT "->" ${IMAGE}-gdb-gen.txt
+	@python3 ${AM_HOME}/tools/gdb-cmd-gen.py ${IMAGE}.elf ${GDB_CMD_LIST}
+
+# We use a simple method to fix the '__am_asm_trap' symbol,
+# but not all programs have this symbol.
+# If you encounter and error here, ignore it.
+	-@$(GDB) --batch -x ${GDB_CMD_LIST} > ${IMAGE}-gdb-gen.txt
+```
+
+### Tmux (optional)
+关于tmux，你可以参考以下指令序列，加在Makefile合适的位置，也可以选择不管，这项内容还不是很完善。
+
+```makefile
+# If you don't run in tmux, the following code will not work.
+ifneq ($(shell echo $$TMUX),)
+	@tmux kill-pane -a
+	@sleep 0.2
+	@tmux split-window -h
+	@sleep 0.2
+	@tmux split-window -v
+	@sleep 0.2
+	@tmux swap-pane -s 0 -t 2
+	@sleep 0.2
+	@tmux send-keys "vim ${IMAGE}-gdb-gen.txt" C-m
+	@sleep 0.2
+	@tmux select-pane -t 1
+	@sleep 0.2
+	@tmux send-keys "touch build/nemu-log.txt" C-m
+	@sleep 0.2
+	@tmux send-keys "tail -f build/nemu-log.txt" C-m
+	@sleep 0.2
+	@tmux select-pane -t 2
+	@sleep 0.2
+endif
+```
