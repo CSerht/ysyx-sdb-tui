@@ -12,3 +12,4 @@
 !*.py
 !*.vim
 *.txt
+!image/*
