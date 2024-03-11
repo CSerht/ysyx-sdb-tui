@@ -36,7 +36,7 @@ A simple tui used for sdb in the ysyx project's nemu or npc.
 1. 将 `disasm-autojump.c` 和 `disasm-highlight.vim`放在NEMU的 `utils`目录下（放别的地方也可以，无影响）
 2. 在 `Kconfig`合适的位置添加 `VIM_AUTO_JUMP`
 3. 在 `init_monitor`函数的 `longimg_size=load_img();`之后合适的位置声明和调用 `disasm_init_vim_script(cpu.pc)`
-4. 在 `execute`函数中的 `for` **循环体结束后**添加  `disasm_pos_and_hl(s.pc)`
+4. 在 `execute`函数中的 `for` **循环体结束后**添加  `disasm_pos_and_hl(s.dnpc)` [这里有一个修改，应该是`dnpc`而不是`pc`，这样高亮显示的就是下一条即将执行的指令。]
 
 
 > [!WARNING]
